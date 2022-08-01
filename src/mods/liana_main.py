@@ -664,6 +664,10 @@ def set_material(settings: Settings, mat: bpy.types.Material, mat_data: dict, ov
                     if param["Value"]:
                         N_SHADER.inputs["Invert Alpha"].default_value = 1
 
+                if "use diffuse b alpha" in param_name and "Use B Alpha" in N_SHADER.inputs:
+                    if param["Value"]:
+                        N_SHADER.inputs["Use B Alpha"].default_value = 1
+
                 if "use vertex color" in param_name:
                     if getattr(obj_data, VCOL_ATTR_NAME):
                         mat_switches.append(param_name)
