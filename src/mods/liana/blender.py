@@ -145,11 +145,26 @@ def fx(yo):
 
 def set_properties(byo: bpy.types.Object, object: dict, is_instanced: bool = False, is_light: bool = False):
     if is_instanced:
-        if "OffsetLocation" in object:
+        transform = object["TransformData"]
+        if "Rotation" in transform:
+            byo.rotation_mode = 'QUATERNION'
+            byo.rotation_quaternion = [
+                (-transform["Rotation"]["W"]),
+                (transform["Rotation"]["X"]),
+                (-transform["Rotation"]["Y"]),
+                (transform["Rotation"]["Z"])
+            ]
+        if "Translation" in transform:
             byo.location = [
-                byo.location[0] + (object["OffsetLocation"]["X"] * 0.01),
-                byo.location[1] + (object["OffsetLocation"]["Y"] * -0.01),
-                byo.location[2] + (object["OffsetLocation"]["Z"] * 0.01)
+                byo.location[0] + (transform["Translation"]["X"] * 0.01),
+                byo.location[1] + (transform["Translation"]["Y"] * -0.01),
+                byo.location[2] + (transform["Translation"]["Z"] * 0.01)
+            ]
+        if "Scale3D" in transform:
+            byo.scale = [
+                transform["Scale3D"]["X"],
+                transform["Scale3D"]["Y"],
+                transform["Scale3D"]["Z"]
             ]
     else:
         if "RelativeLocation" in object:
@@ -158,23 +173,22 @@ def set_properties(byo: bpy.types.Object, object: dict, is_instanced: bool = Fal
                 object["RelativeLocation"]["Y"] * -0.01,
                 object["RelativeLocation"]["Z"] * 0.01
             ]
+        if "RelativeRotation" in object:
+            byo.rotation_mode = 'XYZ'
+            byo.rotation_euler = [
+                fx(object["RelativeRotation"]["Roll"]),
+                fx(-object["RelativeRotation"]["Pitch"]),
+                fx(-object["RelativeRotation"]["Yaw"])
+            ]
+        if "RelativeScale3D" in object:
+            byo.scale = [
+                object["RelativeScale3D"]["X"],
+                object["RelativeScale3D"]["Y"],
+                object["RelativeScale3D"]["Z"]
+            ]
 
-    if "RelativeRotation" in object:
-        byo.rotation_mode = 'XYZ'
-        byo.rotation_euler = [
-            fx(object["RelativeRotation"]["Roll"]),
-            fx(-object["RelativeRotation"]["Pitch"]),
-            fx(-object["RelativeRotation"]["Yaw"])
-        ]
-
-    if "RelativeScale3D" in object:
-        byo.scale = [
-            object["RelativeScale3D"]["X"],
-            object["RelativeScale3D"]["Y"],
-            object["RelativeScale3D"]["Z"]
-        ]
-
-    if is_light:
+    # TODO: logic is wrong but 'lights' are a WIP anyway
+    if is_light:  # what on earth is this Luvi???
         if "RelativeRotation" in object:
             byo.rotation_mode = 'XYZ'
             byo.rotation_euler = [
@@ -183,7 +197,6 @@ def set_properties(byo: bpy.types.Object, object: dict, is_instanced: bool = Fal
                 fx(object["RelativeRotation"]["Pitch"]),
                 fx(-object["RelativeRotation"]["Yaw"])
             ]
-
         if "RelativeScale3D" in object:
             byo.scale = [
                 object["RelativeScale3D"]["X"],
