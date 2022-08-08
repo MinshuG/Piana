@@ -140,10 +140,7 @@ def remove_master_objects():
 
 # ANCHOR : Property Controls
 
-def fx(yo):
-    return radians(yo)
-
-def set_properties(byo: bpy.types.Object, object: dict, is_instanced: bool = False, is_light: bool = False):
+def set_properties(byo: bpy.types.Object, object: dict, is_instanced: bool = False):
     if is_instanced:
         transform = object["TransformData"]
         if "Rotation" in transform:
@@ -176,26 +173,9 @@ def set_properties(byo: bpy.types.Object, object: dict, is_instanced: bool = Fal
         if "RelativeRotation" in object:
             byo.rotation_mode = 'XYZ'
             byo.rotation_euler = [
-                fx(object["RelativeRotation"]["Roll"]),
-                fx(-object["RelativeRotation"]["Pitch"]),
-                fx(-object["RelativeRotation"]["Yaw"])
-            ]
-        if "RelativeScale3D" in object:
-            byo.scale = [
-                object["RelativeScale3D"]["X"],
-                object["RelativeScale3D"]["Y"],
-                object["RelativeScale3D"]["Z"]
-            ]
-
-    # TODO: logic is wrong but 'lights' are a WIP anyway
-    if is_light:  # what on earth is this Luvi???
-        if "RelativeRotation" in object:
-            byo.rotation_mode = 'XYZ'
-            byo.rotation_euler = [
-                # abs(n)
-                fx(object["RelativeRotation"]["Roll"]),
-                fx(object["RelativeRotation"]["Pitch"]),
-                fx(-object["RelativeRotation"]["Yaw"])
+                radians(object["RelativeRotation"]["Roll"]),
+                radians(-object["RelativeRotation"]["Pitch"]),
+                radians(-object["RelativeRotation"]["Yaw"])
             ]
         if "RelativeScale3D" in object:
             byo.scale = [
