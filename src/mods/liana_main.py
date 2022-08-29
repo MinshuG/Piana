@@ -2,12 +2,14 @@ import sys
 import os
 import subprocess
 import bpy
+
 from bpy.types import Mesh, ShaderNodeVertexColor
 
 from contextlib import redirect_stdout
 from sys import stdout
 from io import StringIO
-
+from math import *
+from math import cos
 from .liana.helpers import *
 from .liana.blender import *
 from .liana.valorant import *
@@ -1324,6 +1326,23 @@ def import_umap(settings: Settings, umap_data: dict, umap_name: str):
             light_type = get_light_type(object_data)
             light_name = object_data["Outer"]
             light_props = object_data["Properties"]
+            
+            light_intensity = 0
+            if "Intensity" in object_data["Properties"]:
+                light_intensity = object_data["Properties"]["Intensity"]
+            light_unit = "UNITLESS"
+            if "IntensityUnits" in object_data["Properties"]:
+                light_unit = "CANDELAS"
+            cone_angle = 90
+            if "OuterConeAngle" in object_data["Properties"]:
+                light_angle = object_data["Properties"]["OuterConeAngle"]
+            light_color = 
+            if "LightColor" in object_data["Properties"]:
+                light_color = object_data["Properties"]["LightColor"]
+                
+            #barn_angle = 90
+            #if "BarnDoorAngle" in object_data["Properties"]:
+            #    barn_angle = object_data["Properties"]["BarnDoorAngle"]
 
             logger.info(f"[{objectIndex}] | Lighting : {light_name}")
 
@@ -1332,23 +1351,34 @@ def import_umap(settings: Settings, umap_data: dict, umap_name: str):
             light_object.delta_rotation_euler = (0.0, radians(-90.0), 0.0)  # still broken??
             lights_collection.objects.link(light_object)
 
+            pi = radians(180)
+            #steradian_angle = 4*pi
+            #683 conversion factor from lumen to watt at average 555nm wavelength
             for prop_name, prop_value in light_props.items():
                 OtherTypes.append(prop_name)
-
                 if "Intensity" == prop_name:
-                    if light_type == "POINT":
-                        light_object.data.energy = prop_value * 10
+                    if light_type == "POINT":    
+                        if light_unit == "CANDELAS":
+                            light_object.data.energy = (light_intensity*4*pi)/683
+                        else:
+                            light_object.data.energy = (light_intensity*49.7)/683
                     if light_type == "AREA":
-                        light_object.data.energy = prop_value * 10
+                        if light_unit == "CANDELAS":
+                            light_object.data.energy = (light_intensity*2*pi)/683
+                        else:
+                            light_object.data.energy = (light_intensity*199)/683
                     if light_type == "SPOT":
-                        light_object.data.energy = prop_value * 10
-                if "LightColor" == prop_name:
-                    light_object.data.color = get_rgb_255(prop_value)[:-1]
-                if "SourceRadius" == prop_name:
-                    if light_type == "SPOT":
-                        light_object.data.shadow_soft_size = prop_value * 0.01
-                    else:
-                        light_object.data.shadow_soft_size = prop_value * 0.1
+                        if light_unit == "CANDELAS":
+                            light_object.data.energy = (light_intensity*2*pi*(1-cos(cone_angle/2)))/683
+                        else:
+                            light_object.data.energy = (light_intensity*99.5*(1-cos(cone_angle/2)))/683
+                    if "LightColor" == prop_name:
+                        light_object.data.color = get_rgb_255(prop_value)[:-1]
+                    if "SourceRadius" == prop_name:
+                        if light_type == "SPOT":
+                            light_object.data.shadow_soft_size = prop_value * 0.01
+                        else:
+                            light_object.data.shadow_soft_size = prop_value * 0.1
 
                 if light_type == "AREA":
                     light_object.data.shape = 'RECTANGLE'
