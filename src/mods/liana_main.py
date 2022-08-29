@@ -85,33 +85,22 @@ stdout = StringIO()
 
 
 def extract_assets(settings: Settings):
-
-    # Check if everything is exported from uModel
-    if settings.assets_path.joinpath("exported.yo").exists():
-        logger.info("Models are already extracted")
-    else:
-        logger.warning("Models are not found, starting exporting!")
-        args = [settings.umodel.__str__(),
-                f"-path={settings.paks_path.__str__()}",
-                f"-game=valorant",
-                f"-aes={settings.aes}",
-                "-export",
-                "*.uasset",
-                "-xay",
-                "-noanim",
-                "-nooverwrite",
-                f"-{settings.texture_format.replace('.', '')}",
-                f"-out={settings.assets_path.__str__()}"]
-
-        print(args)
+    assetobjects = settings.selected_map.folder_path.joinpath("AllAssets.txt")
+    args = [settings.umodel.__str__(),
+            f"-path={settings.paks_path.__str__()}",
+            f"-game=valorant",
+            f"-aes={settings.aes}",
+            f"-files={assetobjects}",
+            "-export",
+            "-xay",
+            "-noanim",
+            "-nooverwrite",
+            f"-{settings.texture_format.replace('.', '')}",
+            f"-out={settings.assets_path.__str__()}"]
 
         # Export Models
         subprocess.call(args,
                         stderr=subprocess.DEVNULL)
-
-        with open(settings.assets_path.joinpath('exported.yo').__str__(), 'w') as out_file:
-            out_file.write("")
-
 
 def extract_data(settings: Settings, export_directory: str, asset_list_txt: str = ""):
 
@@ -181,7 +170,7 @@ def get_map_assets(settings: Settings):
 
         umaps = get_files(path=settings.selected_map.umaps_path.__str__(), extension=".json")
         umap: Path
-
+        allassets =list()
         object_list = list()
         materials_ovr_list = list()
         materials_list = list()
@@ -194,7 +183,8 @@ def get_map_assets(settings: Settings):
             save_json(umap.__str__(), umap_json)
 
             # get objects
-            umap_objects, umap_materials = get_objects(umap_json)
+            umap_objects, umap_materials,allumapassets = get_objects(umap_json)
+            allassets.append(allumapassets)
 
             object_list.append(umap_objects)
             materials_ovr_list.append(umap_materials)
@@ -219,17 +209,17 @@ def get_map_assets(settings: Settings):
             save_json(model.__str__(), model_json)
 
             # get object materials
-            model_materials = get_object_materials(model_json)
+            model_materials,allumapmats = get_object_materials(model_json)
 
             # get object textures
             # ...
 
             materials_list.append(model_materials)
-
+            allassets.append(allumapmats)
+        assets_txt = save_list(filepath=settings.selected_map.folder_path.joinpath(f"AllAssets.txt"), lines=allassets)
         mats_txt = save_list(filepath=settings.selected_map.folder_path.joinpath(f"_assets_materials.txt"), lines=materials_list)
         extract_data(settings, export_directory=settings.selected_map.materials_path, asset_list_txt=mats_txt)
-
-        print(settings.selected_map.folder_path.joinpath('exported.yo').__str__())
+        extract_assets(settings)
         with open(settings.selected_map.folder_path.joinpath('exported.yo').__str__(), 'w') as out_file:
             out_file.write("")
 
@@ -1536,8 +1526,6 @@ def import_map(addon_prefs):
         inject_dll(os.getpid(), settings.dll_path.__str__())
         addon_prefs.isInjected = True
     
-    #  Check if the game files are exported
-    extract_assets(settings)
 
     # Clear the scene
     clean_scene()
