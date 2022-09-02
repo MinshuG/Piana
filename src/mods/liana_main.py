@@ -88,10 +88,10 @@ stdout = StringIO()
 
 
 def extract_assets(settings: Settings):
-    assetobjects = settings.selected_map.folder_path.joinpath("AllAssets.txt")
+    assetobjects = settings.selected_map.folder_path.joinpath("all_assets.txt")
     args = [settings.umodel.__str__(),
             f"-path={settings.paks_path.__str__()}",
-            f"-game=valorant",
+            "-game=valorant",
             f"-aes={settings.aes}",
             f"-files={assetobjects}",
             "-export",
@@ -101,9 +101,10 @@ def extract_assets(settings: Settings):
             f"-{settings.texture_format.replace('.', '')}",
             f"-out={settings.assets_path.__str__()}"]
 
-        # Export Models
-        subprocess.call(args,
-                        stderr=subprocess.DEVNULL)
+    # Export Models
+    subprocess.call(args,
+                    stderr=subprocess.DEVNULL)
+
 
 def extract_data(settings: Settings, export_directory: str, asset_list_txt: str = ""):
 
@@ -173,7 +174,6 @@ def get_map_assets(settings: Settings):
 
         umaps = get_files(path=settings.selected_map.umaps_path.__str__(), extension=".json")
         umap: Path
-        allassets =list()
         object_list = list()
         materials_ovr_list = list()
         materials_list = list()
@@ -186,16 +186,15 @@ def get_map_assets(settings: Settings):
             save_json(umap.__str__(), umap_json)
 
             # get objects
-            umap_objects, umap_materials,allumapassets = get_objects(umap_json)
-            allassets.append(allumapassets)
+            umap_objects, umap_materials = get_objects(umap_json)
 
             object_list.append(umap_objects)
             materials_ovr_list.append(umap_materials)
 
             # parse objects
 
-        object_txt = save_list(filepath=settings.selected_map.folder_path.joinpath(f"_assets_objects.txt"), lines=object_list)
-        mats_ovr_txt = save_list(filepath=settings.selected_map.folder_path.joinpath(f"_assets_materials_ovr.txt"), lines=materials_ovr_list)
+        object_txt = save_list(filepath=settings.selected_map.folder_path.joinpath("_assets_objects.txt"), lines=object_list)
+        mats_ovr_txt = save_list(filepath=settings.selected_map.folder_path.joinpath("_assets_materials_ovr.txt"), lines=materials_ovr_list)
 
         extract_data(settings, export_directory=settings.selected_map.objects_path, asset_list_txt=object_txt)
         extract_data(settings, export_directory=settings.selected_map.materials_ovr_path, asset_list_txt=mats_ovr_txt)
@@ -212,20 +211,22 @@ def get_map_assets(settings: Settings):
             save_json(model.__str__(), model_json)
 
             # get object materials
-            model_materials,allumapmats = get_object_materials(model_json)
+            model_materials = get_object_materials(model_json)
 
             # get object textures
             # ...
 
             materials_list.append(model_materials)
-            allassets.append(allumapmats)
-        assets_txt = save_list(filepath=settings.selected_map.folder_path.joinpath(f"AllAssets.txt"), lines=allassets)
-        mats_txt = save_list(filepath=settings.selected_map.folder_path.joinpath(f"_assets_materials.txt"), lines=materials_list)
+        save_list(filepath=settings.selected_map.folder_path.joinpath("all_assets.txt"), lines=[
+            [
+                path_convert(path) for path in _list
+            ] for _list in object_list + materials_list + materials_ovr_list
+        ])
+        mats_txt = save_list(filepath=settings.selected_map.folder_path.joinpath("_assets_materials.txt"), lines=materials_list)
         extract_data(settings, export_directory=settings.selected_map.materials_path, asset_list_txt=mats_txt)
         extract_assets(settings)
         with open(settings.selected_map.folder_path.joinpath('exported.yo').__str__(), 'w') as out_file:
             out_file.write("")
-
     else:
         umaps = get_files(path=settings.selected_map.umaps_path.__str__(), extension=".json")
         logger.info("JSON files are already extracted")

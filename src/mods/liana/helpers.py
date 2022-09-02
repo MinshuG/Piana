@@ -7,7 +7,6 @@ from subprocess import run
 from shutil import rmtree
 from collections.abc import Iterable
 from enum import Enum
-import requests
 
 
 FILEBROWSER_PATH = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
@@ -145,6 +144,15 @@ def create_folders(self):
             if not f.exists():
                 print(f"Creating folder {f}")
                 f.mkdir(parents=True)
+
+
+def path_convert(path: str) -> str:
+    b, c, rest = path.split("\\", 2)
+    if b == "ShooterGame":
+        b = "Game"
+    if c == "Content":
+        c = ""
+    return "\\".join((b, c, rest))
 
 
 # ANCHOR: Classes

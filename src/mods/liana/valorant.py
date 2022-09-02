@@ -24,42 +24,31 @@ def filter_umap(umap_data: dict) -> list:
 
     return umap_filtered, object_types
 
-def GetActualName(name):#\Game\Environments\Crag\Map\Crag_Game
-    newlen = name.rfind('\\') + 1
-    jc = name[newlen:len(name)]
-    return jc
+
 def get_objects(umap_data):
     umap_objects = list()
     umap_materials = list()
-    allobjes = list()
     for obj in umap_data:
-
         if "Properties" in obj:
             if "StaticMesh" in obj["Properties"]:
                 if obj["Properties"]["StaticMesh"] is not None:
                     obj_path = get_object_path(data=obj, mat=False)
                     umap_objects.append(obj_path)
-                    allobjes.append(GetActualName(obj_path))
                     if "OverrideMaterials" in obj["Properties"]:
                         for mat in obj["Properties"]["OverrideMaterials"]:
                             if mat is not None:
-                                ovrmat = get_object_path(data=mat, mat=True)
-                                umap_materials.append(ovrmat)
-                                allobjes.append(GetActualName(ovrmat))
-
+                                umap_materials.append(get_object_path(data=mat, mat=True))
             elif "DecalMaterial" in obj["Properties"]:
                 mat = obj["Properties"]["DecalMaterial"]
                 if mat is not None:
-                    decalmat = get_object_path(data=mat, mat=True)
-                    umap_materials.append(decalmat)
-                    allobjes.append(GetActualName(decalmat))
+                    umap_materials.append(get_object_path(data=mat, mat=True))
 
-    return umap_objects, umap_materials,allobjes
+    return umap_objects, umap_materials
 
 
 def get_object_path(data: dict, mat: bool):
     if mat:
-        s = data["ObjectPath"]
+        s: str = data["ObjectPath"]
     else:
         s = data["Properties"]["StaticMesh"]["ObjectPath"]
 
@@ -84,18 +73,15 @@ def get_object_type(model_data: dict) -> str:
 def get_object_materials(model_json: dict):
     # model_json = _common.read_json(model)
     model_materials = list()
-    allmates = list()
     if "Properties" in model_json:
         if "StaticMaterials" in model_json["Properties"]:
             for mat in model_json["Properties"]["StaticMaterials"]:
                 if mat is not None and "MaterialInterface" in mat:
                     if mat["MaterialInterface"] is not None:
                         material = mat["MaterialInterface"]
-                        MatPath = get_object_path(data=material, mat=True)
-                        model_materials.append(MatPath)
-                        allmates.append(GetActualName(MatPath))
+                        model_materials.append(get_object_path(data=material, mat=True))
 
-    return model_materials,allmates
+    return model_materials
 
 
 def fix_path(a: str):
