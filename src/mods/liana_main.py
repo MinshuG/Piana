@@ -10,6 +10,7 @@ from sys import stdout
 from io import StringIO
 from math import *
 from math import cos
+from math import pi
 from .liana.helpers import *
 from .liana.blender import *
 from .liana.valorant import *
@@ -1325,14 +1326,7 @@ def import_umap(settings: Settings, umap_data: dict, umap_name: str):
                 light_unit = "CANDELAS"
             cone_angle = 90
             if "OuterConeAngle" in object_data["Properties"]:
-                light_angle = object_data["Properties"]["OuterConeAngle"]
-            light_color = 
-            if "LightColor" in object_data["Properties"]:
-                light_color = object_data["Properties"]["LightColor"]
-                
-            #barn_angle = 90
-            #if "BarnDoorAngle" in object_data["Properties"]:
-            #    barn_angle = object_data["Properties"]["BarnDoorAngle"]
+                cone_angle = object_data["Properties"]["OuterConeAngle"]
 
             logger.info(f"[{objectIndex}] | Lighting : {light_name}")
 
@@ -1341,9 +1335,6 @@ def import_umap(settings: Settings, umap_data: dict, umap_name: str):
             light_object.delta_rotation_euler = (0.0, radians(-90.0), 0.0)  # still broken??
             lights_collection.objects.link(light_object)
 
-            pi = radians(180)
-            #steradian_angle = 4*pi
-            #683 conversion factor from lumen to watt at average 555nm wavelength
             for prop_name, prop_value in light_props.items():
                 OtherTypes.append(prop_name)
                 if "Intensity" == prop_name:
