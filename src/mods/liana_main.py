@@ -9,8 +9,6 @@ from contextlib import redirect_stdout
 from sys import stdout
 from io import StringIO
 from math import *
-from math import cos
-from math import pi
 from .liana.helpers import *
 from .liana.blender import *
 from .liana.valorant import *
@@ -56,11 +54,21 @@ BLACKLIST = [
     "sm_port_snowflakes_boundmesh",
     "sm_barrierduality",
     "M_Pitt_Caustics_Box",
-    "box_for_volumes",
+    "box_for_volumes", 
+    "BombsiteMarker_0_BombsiteA_Glow",
+    "BombsiteMarker_0_BombsiteB_Glow",
     "supergrid",
     "_col",
     "M_Pitt_Lamps_Glow",
     "for_volumes",
+    "Bombsite_0_ASiteSide",
+    "Bombsite_0_BSiteSide",
+    "For_Volumes",
+    "Foxtrot_ASite_Plane_DU",
+    "Foxtrot_ASite_Side_DU",
+    "BombsiteMarker_0_BombsiteA_Glow",
+    "BombsiteMarker_0_BombsiteB_Glow",
+    "Tech_0_RebelSupplyCargoTarpLargeCollision"
 ]
 
 COUNT = 0
@@ -1322,58 +1330,53 @@ def import_umap(settings: Settings, umap_data: dict, umap_name: str):
             light_intensity = 0
             if "Intensity" in object_data["Properties"]:
                 light_intensity = object_data["Properties"]["Intensity"]
-            light_unit = "UNITLESS"
-            if "IntensityUnits" in object_data["Properties"]:
-                light_unit = "CANDELAS"
-            cone_angle = 90
-            if "OuterConeAngle" in object_data["Properties"]:
-                cone_angle = object_data["Properties"]["OuterConeAngle"]
 
             logger.info(f"[{objectIndex}] | Lighting : {light_name}")
 
             light_data = bpy.data.lights.new(name=light_name, type=light_type)
             light_object = bpy.data.objects.new(name=light_name, object_data=light_data)
-            light_object.delta_rotation_euler = (0.0, radians(-90.0), 0.0)  # still broken??
+            light_object.delta_rotation_euler = (0.0, radians(-90.0), radians(-90.0))  # still broken??
             lights_collection.objects.link(light_object)
 
             for prop_name, prop_value in light_props.items():
                 OtherTypes.append(prop_name)
                 if "Intensity" == prop_name:
                     if light_type == "POINT":    
-                        if light_unit == "CANDELAS":
-                            light_object.data.energy = (light_intensity*4*pi)/683
+                        if "IntensityUnits" in object_data["Properties"]:
+                            light_object.data.energy = light_intensity / (4 * pi) / 683
                         else:
-                            light_object.data.energy = (light_intensity*49.7)/683
-                    if light_type == "AREA":
-                        if light_unit == "CANDELAS":
-                            light_object.data.energy = (light_intensity*2*pi)/683
+                            light_object.data.energy = light_intensity * 49.7 / 683
+                    elif light_type == "AREA":
+                        if "IntensityUnits" in object_data["Properties"]:
+                            light_object.data.energy = light_intensity / (2 * pi) / 683
                         else:
-                            light_object.data.energy = (light_intensity*199)/683
+                            light_object.data.energy = light_intensity * 199 / 683
+                    elif light_type == "SPOT":
+                        if "IntensityUnits" in object_data["Properties"]:
+                            light_object.data.energy = light_intensity / (4 * pi) / 683
+                        else:
+                            light_object.data.energy = light_intensity * 49.7 / 683
+                    elif light_type == "SUN":
+                        light_object.data.energy = light_intensity * 350 / 683 #random multiplier because unreal lux is wrong
+                elif "LightColor" == prop_name:
+                    light_object.data.color = get_rgb_255(prop_value)
+                elif "SourceRadius" == prop_name:
                     if light_type == "SPOT":
-                        if light_unit == "CANDELAS":
-                            light_object.data.energy = (light_intensity*2*pi*(1-cos(cone_angle/2)))/683
-                        else:
-                            light_object.data.energy = (light_intensity*99.5*(1-cos(cone_angle/2)))/683
-                    if "LightColor" == prop_name:
-                        light_object.data.color = get_rgb_255(prop_value)[:-1]
-                    if "SourceRadius" == prop_name:
-                        if light_type == "SPOT":
-                            light_object.data.shadow_soft_size = prop_value * 0.01
-                        else:
-                            light_object.data.shadow_soft_size = prop_value * 0.1
+                        light_object.data.shadow_soft_size = prop_value * 0.01
+                    else:
+                        light_object.data.shadow_soft_size = prop_value * 0.1
 
                 if light_type == "AREA":
                     light_object.data.shape = 'RECTANGLE'
                     if "SourceWidth" == prop_name:
                         light_object.data.size = prop_value * 0.01
-                    if "SourceHeight" == prop_name:
+                    elif "SourceHeight" == prop_name:
                         light_object.data.size_y = prop_value * 0.01
 
-                if light_type == "SPOT":
-                    if "InnerConeAngle" == prop_name:
-                        light_object.data.spot_blend = 1
+                elif light_type == "SPOT":
+                    light_object.data.spot_blend = 1
                     if "OuterConeAngle" == prop_name:
-                        light_object.data.spot_size = prop_value * 0.01
+                        light_object.data.spot_size = radians(prop_value)
 
             set_properties(byo=light_object, object=light_props)
 

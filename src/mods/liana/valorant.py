@@ -8,7 +8,7 @@ def filter_umap(umap_data: dict) -> list:
     umap_filtered = list()
 
     mesh_types = ["staticmesh", "staticmeshcomponent", "instancedstaticmeshcomponent", "hierarchicalinstancedstaticmeshcomponent"]
-    gen_types = ["decalcomponent", "pointlightcomponent", "rectlightcomponent", "spotlightcomponent"]
+    gen_types = ["decalcomponent", "pointlightcomponent", "rectlightcomponent", "spotlightcomponent", "directionallightcomponent"]
 
     object_types = []
 
@@ -58,7 +58,7 @@ def get_object_path(data: dict, mat: bool):
 
 def get_object_type(model_data: dict) -> str:
 
-    lights = ["PointLightComponent", "RectLightComponent", "SpotLightComponent"]
+    lights = ["PointLightComponent", "RectLightComponent", "SpotLightComponent", "DirectionalLightComponent"]
     meshes = ["StaticMeshComponent", "InstancedStaticMeshComponent", "HierarchicalInstancedStaticMeshComponent"]
     decals = ["DecalComponent"]
 
@@ -97,6 +97,8 @@ def get_light_type(object):
         return "SPOT"
     if "RectLightComponent" in object["Type"]:
         return "AREA"
+    if "Directional" in object["Type"]:
+        return "SUN"
 
 
 def get_name(s: str) -> str:
@@ -126,13 +128,11 @@ def get_valorant_shader(group_name: str):
 
 # ANCHOR Getters
 
-def get_rgb_255(pv: dict) -> tuple:
+def get_rgb_255(pv: dict):
     return (
         pv["R"] / 255,
         pv["G"] / 255,
-        pv["B"] / 255,
-        pv["A"] / 255
-    )
+        pv["B"] / 255)
 
 
 def get_rgb(pv: dict) -> tuple:
