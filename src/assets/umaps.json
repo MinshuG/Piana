@@ -138,6 +138,7 @@
         "Canyon_VistaA"
     ],
     "range": [
+        "Range_Art_AsylumBasement",
         "Range_Art_AsylumDown",
         "Range_Art_AsylumUp",
         "Range_Art_BMainInterior",
