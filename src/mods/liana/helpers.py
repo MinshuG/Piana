@@ -155,6 +155,33 @@ def path_convert(path: str) -> str:
     return "\\".join((b, c, rest))
 
 
+def get_valorant_version() -> str:
+    val_file = "C:\\ProgramData\\Riot Games\\Metadata\\valorant.live\\valorant.live.ok"
+    if os.path.exists(val_file):
+        with open(val_file, "r") as f:
+            file = f.read()
+            split_file = file.split('\n')
+            return split_file[0].split('/')[-1].split('.')[0]
+    else:
+        return None
+
+
+def check_export(settings):
+    exp_path = settings.selected_map.folder_path.joinpath("exported.yo")
+    if exp_path.exists():
+        exp_data = json.load(open(exp_path))
+        val_version = exp_data[0]
+        if val_version != settings.val_version or settings.dev_force_reexport:
+            return True
+    else:
+        return True
+    return False
+
+def write_export_file():
+    new_json = [get_valorant_version()]
+    json_object = json.dumps(new_json, indent=4)
+    return json_object
+
 # ANCHOR: Classes
 # -------------------------- #
 
@@ -191,6 +218,8 @@ class Settings:
         self.combine_umaps = addon_prefs.combineUmaps
         self.combine_method = addon_prefs.combineMethod
         self.textures = addon_prefs.textureControl
+        self.val_version = get_valorant_version()
+        self.dev_force_reexport = False
         self.export_path = Path(addon_prefs.exportPath)
         self.assets_path = self.export_path.joinpath("export")
         self.maps_path = self.export_path.joinpath("maps")
