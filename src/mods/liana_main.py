@@ -174,8 +174,7 @@ def get_object(map_object, index, link, scene_unlink) -> bpy.types.Object:
 
 def get_map_assets(settings: Settings):
     umaps = []
-
-    if not settings.selected_map.folder_path.joinpath("exported.yo").exists():
+    if check_export(settings):
         # if 1 == 1:
         logger.info("Extracting JSON files")
         extract_data(settings, export_directory=settings.selected_map.umaps_path)
@@ -234,7 +233,7 @@ def get_map_assets(settings: Settings):
         extract_data(settings, export_directory=settings.selected_map.materials_path, asset_list_txt=mats_txt)
         extract_assets(settings)
         with open(settings.selected_map.folder_path.joinpath('exported.yo').__str__(), 'w') as out_file:
-            out_file.write("")
+            out_file.write(write_export_file())
     else:
         umaps = get_files(path=settings.selected_map.umaps_path.__str__(), extension=".json")
         logger.info("JSON files are already extracted")
