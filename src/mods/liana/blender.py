@@ -2,6 +2,7 @@ import bpy
 import os
 import logging
 from math import radians
+from mathutils import Vector
 from ...utils.common import setup_logger
 
 logger = setup_logger(__name__)
@@ -25,7 +26,7 @@ def clean_scene(debug: bool = False):
     for block in bpy.data.images:
         if ".hdr" not in block.name and "Skies" not in block.name:
             bpy.data.images.remove(block)
-        
+
     for block in bpy.data.lights:
         bpy.data.lights.remove(block)
 
@@ -171,12 +172,21 @@ def set_properties(byo: bpy.types.Object, object: dict, is_instanced: bool = Fal
                 object["RelativeLocation"]["Z"] * 0.01
             ]
         if "RelativeRotation" in object:
-            byo.rotation_mode = 'XYZ'
-            byo.rotation_euler = [
+            rotation_euler = Vector([
                 radians(object["RelativeRotation"]["Roll"]),
                 radians(-object["RelativeRotation"]["Pitch"]),
                 radians(-object["RelativeRotation"]["Yaw"])
-            ]
+                ])
+
+            byo.rotation_mode = 'QUATERNION'
+            byo.rotation_euler = rotation_euler.to_track_quat("-Y").to_euler()
+
+            # byo.rotation_mode = 'XYZ'
+            # byo.rotation_euler = [
+            #     radians(object["RelativeRotation"]["Roll"]),
+            #     radians(-object["RelativeRotation"]["Pitch"]),
+            #     radians(-object["RelativeRotation"]["Yaw"])
+            # ]
         if "RelativeScale3D" in object:
             byo.scale = [
                 object["RelativeScale3D"]["X"],
@@ -286,7 +296,7 @@ def remove_duplicate_mats():
                 # if base in mats:
                 #     # print("  For object '%s' replace '%s' with '%s'" % (obj.name, slot.name, base))
                 #     slot.material = mats.get(base)
-                    
+
                 if not slot.material.users:
                     bpy.data.materials.remove(slot.material)
 
